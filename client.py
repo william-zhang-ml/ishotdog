@@ -1,6 +1,7 @@
 """
 App for asking server if something is a hotdog or not.
 """
+import json
 from typing import Any
 from kivy.app import App
 from kivy.network.urlrequest import UrlRequest
@@ -18,13 +19,23 @@ class UserInterface(BoxLayout):
         """Handle button press, either submit an image or reset. """
 
         if self._camera.play:
-            self._button.disabled = True             # disable user input
-            self._camera.play = False                # pause camera
-            pass                                     # submit image and wait
-            self._label.text = 'HOTDOG'              # show result
-            self._label.color = (0, 1, 0, 1)         # show result
-            self._button.text = 'Reset!'             # inform user
-            self._button.disabled = False            # enable user input
+            self._button.disabled = True  # disable user input
+            self._camera.play = False     # pause camera
+
+            # prep request body
+            req_body = {
+                'mode': self._camera.texture.colorfmt.upper(),
+                'size': self._camera.texture.size,
+                'data': self._camera.texture.pixels.hex()
+            }
+
+            # submit image and wait
+            req = UrlRequest(
+                'http://127.0.0.1:8000/score/',
+                req_headers={'Content-Type': 'application/json'},
+                req_body=json.dumps(req_body),
+                on_success=self._handle_response  # show result
+            )
         else:
             self._button.disabled = True             # disable user input
             self._camera.play = True                 # unpause camera
@@ -36,15 +47,22 @@ class UserInterface(BoxLayout):
     def _handle_response(
         self,
         req: UrlRequest,
-        result: Any
+        ishotdog: bool
     ) -> None:
         """Process server response to a submitted image.
 
         Args:
             req (UrlRequest): HTTP(S) request
-            result (Any): request result
+            ishotdog (bool): hotdog or not hotdog
         """
-        return
+        if ishotdog:
+            self._label.text = 'HOTDOG'
+            self._label.color = (0, 1, 0, 1)
+        else:
+            self._label.text = 'NOT HOTDOG'
+            self._label.color = (1, 0, 0, 1)
+        self._button.text = 'Reset!'   # inform user
+        self._button.disabled = False  # enable user input
 
 
 class ClientApp(App):
