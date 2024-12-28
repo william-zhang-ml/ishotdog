@@ -1,0 +1,22 @@
+<UserInterface>
+    _label: label
+    _camera: camera
+    _button: button
+
+    orientation: "vertical"
+
+    Label:
+        id: label
+        height: "48sp"
+        size_hint_y: None
+        text: "Take a picture!"
+    Camera:
+        id: camera
+        resolution: (640, 480)
+        play: True
+    Button:
+        id: button
+        text: "Send"
+        height: "48sp"
+        size_hint_y: None
+        on_press: root._handle_press()
